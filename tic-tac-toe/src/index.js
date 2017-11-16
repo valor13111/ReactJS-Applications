@@ -2,18 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-// React component
-// Returns a view of Square Component taking in a param named value, from Board Component
-//class Square extends React.Component {
-//  render() {
-//    return (
-//      <button className="square" onClick={() => this.props.onClick()}>
-//      	{this.props.value}
-//      </button>
-//    );
-//  }
-//}
-
 // This is a functional component, which is simpler to write.  It is used when 
 // component types only consist of a render method.  Don't need to define a class
 // extending React.Component, just write a function that takes props and returns
@@ -31,54 +19,20 @@ function Square(props) {
 // In the Square class, in the render method, it returns with {this.props.value},
 // where props is the param it takes in, and value is the name of the param from Board
 class Board extends React.Component {
-  constructor() {
-	  super();
-	  this.state = {
-		  squares: Array(9).fill(null),
-		  xIsNext: true,
-	  };
-  }	
-  
-  // handles the click when a square on game board is clicked
-  // will also check to see if there is a winner, and if so, it doesn't allow clicking anymore
-  handleClick(i) {
-	  const squares = this.state.squares.slice();
-	  
-	  if (calculateWinner(squares) || squares[i]) {
-		  return;
-	  }
-	  
-	  // if squares[i] = this.state.xIsNext, return X, if not, then return O
-	  squares[i] = this.state.xIsNext ? 'X' : 'O';
-	  // set board state with squares again, and change boolean value of xIsNext
-	  this.setState({
-		  squares: squares,
-		  xIsNext: !this.state.xIsNext,
-	  });
-  }
 	
   // render a square, passing property of a value and onClick
   renderSquare(i) {
 	    return (
 	      <Square 
-	        value={this.state.squares[i]}
-	        onClick={() => this.handleClick(i)}
+	        value={this.props.squares[i]}
+	        onClick={() => this.props.onClick(i)}
 	      />
 	    );
 	  }
 
   render() {
-	const winner = calculateWinner(this.state.squares);
-	let status;
-	if (winner) {
-		status = 'Winner: ' + winner;
-	} else {
-		status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-	}
-
     return (
       <div>
-        <div className="status">{status}</div>
         <div className="board-row">
           {this.renderSquare(0)}
           {this.renderSquare(1)}
@@ -101,22 +55,96 @@ class Board extends React.Component {
 
 // React component
 class Game extends React.Component {
+	constructor() {
+		super();
+		this.state = {
+			history: [{
+				squares: Array(9).fill(null),
+			}],
+			stepNumber: 0,
+			xIsNext: true,
+		};
+	}
+	
+  // handles the click when a square on game board is clicked
+  // will also check to see if there is a winner, and if so, it doesn't allow clicking anymore
+  handleClick(i) {
+	  const history = this.state.history.slice(0, this.state.stepNumber + 1);
+      const current = history[history.length - 1];
+      const squares = current.squares.slice();
+	  
+	  if (calculateWinner(squares) || squares[i]) {
+		  return;
+	  }
+	  
+	  // if squares[i] = this.state.xIsNext, return X, if not, then return O
+	  squares[i] = this.state.xIsNext ? 'X' : 'O';
+	  // set board state with squares again, and change boolean value of xIsNext
+	  this.setState({
+	      history: history.concat([{
+	        squares: squares
+	      }]),
+	      stepNumber: history.length,
+	      xIsNext: !this.state.xIsNext,
+	    });
+  }
+  
+  jumpTo(step) {
+	  this.setState({
+		  stepNumber: step,
+		  xIsNext: (step % 2) == 0,
+	  })
+  }
+	
   render() {
+    const history = this.state.history;
+	const current = history[this.state.stepNumber]; 
+	const winner = calculateWinner(current.squares);
+	
+	const moves = history.map((step, move) => {
+		const desc = move ?
+				'Go to move #' + move :
+				'Go to game start';
+		return (
+		        <li key={move}>
+		          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+		        </li>
+		      );
+	});
+	
+	
+	let status;
+	if (winner) {
+		status = 'Winner: ' + winner;
+	} else {
+		status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+	}
+	  
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board 
+          	squares={current.squares}
+          	onClick={(i) => this.handleClick(i)}
+          />
         </div>
         <div className="game-info">
-          <div>{/* status */}</div>
-          <ol>{/* TODO */}</ol>
+          <div>{status}</div>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
   }
 }
 
-// functional component to determine winner
+// ========================================
+
+ReactDOM.render(
+  <Game />,
+  document.getElementById('root')
+);
+
+//functional component to determine winner
 function calculateWinner(squares) {
 	// all the winning lines
 	const lines = [
@@ -142,10 +170,3 @@ function calculateWinner(squares) {
 	}
 	return null;
 }
-
-// ========================================
-
-ReactDOM.render(
-  <Game />,
-  document.getElementById('root')
-);
