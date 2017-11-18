@@ -1,6 +1,1 @@
 INDEX VERSION 1.4+C:\Users\valor\React-Applications\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
-1514943475.index
-2404518083.index
-90582620.index
-1301687857.index
-502339388.index
