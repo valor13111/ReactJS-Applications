@@ -46,7 +46,7 @@ class App extends Component {
 				<div className="App">
 					<div className="App-title">Stopwatch</div>
 				 	<Stopwatch />
-					Come back to this later.
+					Next, use concat for laps and create laps method
 				</div>
 			</div>
 
